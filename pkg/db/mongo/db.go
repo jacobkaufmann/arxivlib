@@ -16,21 +16,20 @@ type Datastore struct {
 	connectOnce sync.Once
 	cfg         Config
 
-	Client     *mongo.Client
-	Collection *mongo.Collection
+	Client   *mongo.Client
+	Database *mongo.Database
 }
 
 // A Config holds configuration information about a datastore
 type Config struct {
-	Host           string
-	Port           int
-	Username       string
-	Password       string
-	DatabaseName   string
-	CollectionName string
+	Host         string
+	Port         int
+	Username     string
+	Password     string
+	DatabaseName string
 }
 
-// NewDatastore returns a new Datastore specified by a Config
+// NewDatastore returns a new mongo.Datastore specified by a Config
 func NewDatastore(cfg Config) Datastore {
 	s := Datastore{cfg: cfg}
 	return s
@@ -54,7 +53,7 @@ func (s *Datastore) Connect() {
 			log.Fatal(err)
 		}
 
-		s.Collection = s.Client.Database(s.cfg.DatabaseName).Collection(s.cfg.CollectionName)
+		s.Database = s.Client.Database(s.cfg.DatabaseName)
 	})
 }
 
