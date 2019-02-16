@@ -1,4 +1,4 @@
-package mongo
+package db
 
 import (
 	"context"
@@ -11,8 +11,8 @@ import (
 	"github.com/mongodb/mongo-go-driver/mongo/readpref"
 )
 
-// A Datastore accesses the database
-type Datastore struct {
+// A MongoDatastore accesses the database
+type MongoDatastore struct {
 	connectOnce sync.Once
 	cfg         Config
 
@@ -20,23 +20,14 @@ type Datastore struct {
 	Database *mongo.Database
 }
 
-// A Config holds configuration information about a datastore
-type Config struct {
-	Host         string
-	Port         int
-	Username     string
-	Password     string
-	DatabaseName string
-}
-
-// NewDatastore returns a new mongo.Datastore specified by a Config
-func NewDatastore(cfg Config) Datastore {
-	s := Datastore{cfg: cfg}
+// NewMongoDatastore returns a new MongoDatastore specified by a Config
+func NewMongoDatastore(cfg Config) MongoDatastore {
+	s := MongoDatastore{cfg: cfg}
 	return s
 }
 
 // Connect connects to the MongoDB database specified by the Datastore Config
-func (s *Datastore) Connect() {
+func (s *MongoDatastore) Connect() {
 	s.connectOnce.Do(func() {
 		var err error
 
@@ -58,7 +49,7 @@ func (s *Datastore) Connect() {
 }
 
 // Ping tests the connection to the mongo database
-func (s *Datastore) Ping() error {
+func (s *MongoDatastore) Ping() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 2)
 	defer cancel()
 	err := s.Client.Ping(ctx, readpref.Primary())

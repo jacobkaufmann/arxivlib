@@ -1,4 +1,4 @@
-package postgres
+package db
 
 import (
 	"context"
@@ -8,30 +8,21 @@ import (
 	"sync"
 )
 
-// A Datastore accesses the database
-type Datastore struct {
+// A PostgresDatastore accesses a postgres database
+type PostgresDatastore struct {
 	connectOnce sync.Once
 	cfg         Config
+	modeSSL     string
 
 	Database *sql.DB
 }
 
-// A Config holds configuration information about a datastore
-type Config struct {
-	Host         string
-	Port         int
-	Username     string
-	Password     string
-	DatabaseName string
-	ModeSSL      string
-}
-
 // Connect connects to the MongoDB database specified by the Datastore Config
-func (s *Datastore) Connect() {
+func (s *PostgresDatastore) Connect() {
 	s.connectOnce.Do(func() {
 		var err error
 
-		connStr := fmt.Sprintf("postgres://%s:%s@%s:%d?sslmode=%s", s.cfg.Username, s.cfg.Password, s.cfg.Host, s.cfg.Port, s.cfg.ModeSSL)
+		connStr := fmt.Sprintf("postgres://%s:%s@%s:%d?sslmode=%s", s.cfg.Username, s.cfg.Password, s.cfg.Host, s.cfg.Port, s.modeSSL)
 		s.Database, err = sql.Open("postgres", connStr)
 		if err != nil {
 			log.Fatal(err)
@@ -45,12 +36,12 @@ func (s *Datastore) Connect() {
 }
 
 // Ping tests the connection to the mongo database
-func (s *Datastore) Ping() error {
+func (s *PostgresDatastore) Ping() error {
 	return s.Database.Ping()
 }
 
 // Transact executes query in a transaction, rolling back on failure and committing on success
-func (s *Datastore) Transact(opt *sql.TxOptions, stmt *sql.Stmt, args ...interface{}) error {
+func (s *PostgresDatastore) Transact(opt *sql.TxOptions, stmt *sql.Stmt, args ...interface{}) error {
 	ctx := context.Background()
 	tx, err := s.Database.BeginTx(ctx, opt)
 	if err != nil {
